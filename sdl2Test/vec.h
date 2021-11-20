@@ -10,6 +10,8 @@ public:
 	Vecf operator+(Vecf v);
 	float operator*(Vecf v);
 	Vecf operator*(float a);
+	Vecf operator-();
+	Vecf operator/(float a);
 	Vecf operator-(Vecf v);
 	Vecf& operator+=(Vecf v);
 	

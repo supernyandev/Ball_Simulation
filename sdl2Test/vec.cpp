@@ -30,6 +30,14 @@ Vecf Vecf::operator*(float a)
 {
 	return  Vecf(x*a,y*a);
 }
+Vecf Vecf::operator-()
+{
+	return  Vecf(-this->x,-this->y);
+}
+Vecf Vecf::operator/(float a)
+{
+	return Vecf(x*(1/a),y*(1/a));
+}
 
 Vecf Vecf::operator-(Vecf v)
 {
@@ -61,11 +69,20 @@ Vecf& Vecf::operator-=(Vecf v)
 
 float Vecf::size()
 {
+	
 	return sqrt(x*x+y*y);
 }
 
 void Vecf::norm()
 {
-	this->x /= this->size();
-	this->y /= this->size();
+	if (this->size() == 0) {
+		
+		this->x = rand();
+		this->y = rand();
+		this->norm();
+	}
+	else {
+		this->x /= this->size();
+		this->y /= this->size();
+	}
 }

@@ -7,3 +7,4 @@ float point2_distance(Vecf pos1,Vecf pos2) {
 Vecf operator*(float a,Vecf v) {
 	return v * a;
 }
+

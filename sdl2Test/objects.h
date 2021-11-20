@@ -15,6 +15,8 @@ public:
 	Vecf cpos;
 	Vecf cv;
 	Vecf ca;
+	bool hit_handled = 0;
+	std::set<Ball*> hits;
 	float r;
 	float elapsed_time;
 	Ball(int id,Vecf pos, float r, SDL_Renderer* renderer,float elapsed_time);
@@ -23,11 +25,12 @@ public:
 
 	void move( std::vector<Ball*>& balls);
 	void apply();
+	void bounce_off_wall();
 private:
 	SDL_Renderer* renderer;
 	Vecf take_acceleration(float ID, Vecf pos, std::vector < Ball* >& balls);
 	void draw_circle(Vecf pos, float r);
-	void bounce_off_wall();
+
 
 	
 };

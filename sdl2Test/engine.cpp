@@ -2,6 +2,7 @@
 #include "vec.h"
 #include "misc.h"
 #include <random>
+#include <stack>
 Engine::Engine(SDL_Renderer* renderer,float t) {
 	this->TIME_PER_TICK = t;
 	this->renderer = renderer;
@@ -58,21 +59,94 @@ void Engine::moveall() {
 
 	}
 }
-void Engine::handle_hits(std::vector<std::pair<Ball*, Ball*>>& hits) {
-	for (auto balls2 : hits) {
-		Vecf v1 = balls2.first->v;
-		Vecf v2 = balls2.second->v;
-		Vecf pos1 = balls2.first->pos;
-		Vecf pos2 = balls2.second->pos;
-		float m1 = balls2.first->mass;
-		float m2 = balls2.second->mass;
-		Vecf nv1 = v1 - ((2 * m2) / (m1 + m2) * ((v1-v2)*(pos1-pos2)) / (point2_distance(pos1, pos2) * point2_distance(pos1,pos2))) * (pos1-pos2);
-		Vecf nv2 = v2 - (2 * m1) / (m1 + m2) * ((v1-v2)*(pos1-pos2)) / (point2_distance(pos1, pos2) * point2_distance(pos1,pos2)) * (pos2-pos1);
-		balls2.first->v = nv1;
-		balls2.second->v = nv2;
+void dfs(Ball* ball) {
+	if (ball == NULL || ball->hit_handled) return;
+		ball->hit_handled = 1;
+		auto curr_ball = ball;
+		curr_ball->hit_handled = 1;
+		curr_ball->bounce_off_wall();
+		bool support = 0;
+		if (curr_ball->hits.size() >= 3) {
+			support = 1;
+		}
+
+		for (auto v_ball : curr_ball->hits) {
+			dfs(v_ball);
+			v_ball->bounce_off_wall();
+			Vecf t = v_ball->pos - curr_ball->pos;
+			float dist = point2_distance(v_ball->pos, curr_ball->pos);
+
+			if (isnan(dist)) {
+				dist = 0;
+			}
+
+
+			float d = v_ball->r + curr_ball->r;
+			if (t.size() <= 0.000001f) {
+				t = 10 * t;
+			}
+
+			t.norm();
+
+			Vecf dposv(0, 0);
+			Vecf dposc(0, 0);
+			Vecf dav(0, 0);
+			Vecf dac(0, 0);
+			if (dist < 0.001) {
+				dist = 0.001;
+			}
+			dav += 2000 * t / dist / v_ball->mass;
+
+			dac += -1 * 2000 * t / dist / v_ball->mass;
+			dposv += t * (d - dist) * 0.5;
+			dposc += -1 * t * (d - dist) * 0.5;
+
+			
+			v_ball->pos += dposv;
+			v_ball->ca += dav;
+				
+			
+
+			curr_ball->ca += dac;
+			if (!support) {
+				curr_ball->pos += dposc;
+			}
+
+			//elastic bounce
+			dist = point2_distance(v_ball->pos, curr_ball->pos);
+
+			if (isnan(dist)) {
+				dist = 1;
+			}
+			if (dist <= 0.0001f) {
+				dist = 1;
+			}
+			curr_ball->bounce_off_wall();
+			Vecf v1 = curr_ball->v;
+			Vecf v2 = v_ball->v;
+
+			Vecf pos1 = curr_ball->pos;
+			Vecf pos2 = v_ball->pos;
+			float m1 = curr_ball->mass;
+			float m2 = v_ball->mass;
+			Vecf nv1 = v1 - ((2 * m2) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist)) * (pos1 - pos2);
+			Vecf nv2 = v2 - (2 * m1) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist) * (pos2 - pos1);
+
+			curr_ball->cv = 0.96 * nv1;
+			v_ball->cv = 0.96 * nv2;
+
+		
 	}
 }
+void Engine::handle_hits() {
+	for (auto ball : balls) {
+		//dfs
+		if (ball == NULL || ball->hit_handled) continue;
+		dfs(ball);
 
+		}
+
+	}
 void Engine::tick() {
 	std::vector<std::pair<Ball*, Ball*>> hits;
 	
@@ -89,24 +163,16 @@ void Engine::tick() {
 			if (ball1->ID != ball2->ID) {
 				float d = ball1->r + ball2->r;
 				if (point2_distance(ball1->pos,ball2->pos) - ball1->r - ball2->r<=-0.0000001f) {
-					float nx, ny,t1,t2;
-					Vecf t = ball2->pos - ball1->pos;
-					if (t.size() <= 0.000001f) {
-						t = 10 * t;
-					}
-					t.norm();
-
-					ball2->pos += t * (d - point2_distance(ball1->pos, ball2->pos))*0.5;
-					ball2->pos += -1*t * (d - point2_distance(ball1->pos, ball2->pos)) * 0.5;
-
 					
-					hits.push_back({ ball1,ball2 });
+					ball1->hits.insert(ball2);
+					ball2->hits.insert(ball1);
+					
 				}
 			}
 		}
 	}
 	
-	handle_hits(hits);
+	handle_hits();
 	this->moveall();
 	for (auto ball : balls) {
 		if (ball == NULL) {
@@ -175,8 +241,8 @@ void Engine::handle_left_mouse_click(SDL_Event& e) {
 				this->tick();
 				ball->pos.x = x;
 				ball->pos.y = y;
-				ball->v.x = 0;
-				ball->v.y = 0;
+				ball->cv.x = 0;
+				ball->cv.y = 0;
 				
 				SDL_RenderPresent(renderer);
 				SDL_Delay(10);
@@ -215,7 +281,7 @@ void Engine::handle_right_mouse_click(SDL_Event& e) {
 		if (ball == NULL) {
 			continue;
 		}
-		if (point2_distance(Vecf(x, y), ball->cpos) <= ball->r) {
+		if (point2_distance(Vecf(x, y), ball->pos) <= ball->r) {
 			if_inside = 1;
 			bool quit = 0;
 			while (!quit) {
@@ -225,6 +291,7 @@ void Engine::handle_right_mouse_click(SDL_Event& e) {
 				if (e.type == SDL_MOUSEBUTTONUP) {
 					quit = 1;
 					ball->v = Vecf(xcurr, ycurr) -  Vecf(x, y);
+					ball->cv = Vecf(xcurr, ycurr) - Vecf(x, y);
 				}
 				
 				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);

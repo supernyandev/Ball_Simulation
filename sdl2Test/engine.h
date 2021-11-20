@@ -25,5 +25,5 @@ private:
 	void handle_middle_mouse_click(SDL_Event& e);
 	void drawall();
 	void moveall();
-	void handle_hits(std::vector<std::pair<Ball*, Ball*>>& hits);
+	void handle_hits();
 };

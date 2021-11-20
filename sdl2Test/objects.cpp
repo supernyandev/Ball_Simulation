@@ -58,39 +58,46 @@ void Ball::move( std::vector<Ball*>& balls) {
 	//std::cout <<cvx * elapsed_time- 1.0f / 6.0f * (a.vx + 2.0f * (b.vx + c.vx) + d.vx) * elapsed_time<<' '<<cx << std::endl;
 	/*cpos = pos + (1.0f / 6.0f) * (a.v + 2.0f * (b.v + c.v) + d.v) * elapsed_time;
 	cv = v + (1.0f / 6.0f) * (a.a + 2.0f * (b.a + c.a) + d.a) * elapsed_time;*/
+	
+	pos = pos + cv * elapsed_time;
+	cv = cv + as * elapsed_time;
 
-	cpos = pos + v * elapsed_time;
-	cv = v + as * elapsed_time;
 	
 	
 	
 	 
 }
 void Ball::apply() {
+	Vecf centre(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 	bounce_off_wall();
-	pos = cpos;
+	hit_handled = 0;
+	hits = {};
+
 	v = cv;
-	ca.x = 0;
-	ca.y = 10;
-	a.x = 0;
-	a.y = 10;
+	Vecf ta = pos - centre;
+	ta.norm();
+	ta *= 3;
+	ca = -1*ta;
+	//ca.x = 0;
+	//ca.y = 5;
+
 	
 }
 void Ball :: bounce_off_wall(){
-	if (pos.x > SCREEN_WIDTH-r) {
+	if (pos.x > SCREEN_WIDTH - r) {
 		cv.x = -0.5*v.x;
-		cpos.x = SCREEN_WIDTH-r;
+		pos.x = SCREEN_WIDTH-r;
 	}
-	if (cpos.y > SCREEN_HEIGHT-r) {
+	if (pos.y > SCREEN_HEIGHT-r) {
 		cv.y = -0.5*v.y;
-		cpos.y = SCREEN_HEIGHT-r;
+		pos.y = SCREEN_HEIGHT-r;
 	}
-	if (cpos.x < r) {
+	if (pos.x < r) {
 		cv.x = -0.5*v.x;
-		cpos.x = r;
+		pos.x = r;
 	}
-	if (cpos.y < r) {
+	if (pos.y < r) {
 		cv.y = -0.5*v.y;
-		cpos.y = r;
+		pos.y = r;
 	}
 }

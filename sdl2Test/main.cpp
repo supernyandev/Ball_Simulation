@@ -34,11 +34,13 @@ int main(int argc, char* args[]) {
 	std::vector<Ball*> balls;
 	std::srand(std::time(nullptr));
 	Engine bs(gRenderer, TIME_PER_TICK);
-	std::cout << 1;
 	
 	bool quit = 0;
 	SDL_Event e;
-	for (int i = 0; i < 40; ++i) {
+	Vecf t1(0, 0);
+	Vecf t2(0, 0);
+	std::cout << t1.size()<<std::endl;
+	for (int i = 0; i < 20; ++i) {
 		for (int j = 0; j < 40; ++j) {
 			bs.add_ball( Vecf(300 + i * 20, 300 + j * 20), 10);
 		}
