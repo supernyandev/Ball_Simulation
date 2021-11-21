@@ -58,7 +58,10 @@ void Ball::move( std::vector<Ball*>& balls) {
 	//std::cout <<cvx * elapsed_time- 1.0f / 6.0f * (a.vx + 2.0f * (b.vx + c.vx) + d.vx) * elapsed_time<<' '<<cx << std::endl;
 	/*cpos = pos + (1.0f / 6.0f) * (a.v + 2.0f * (b.v + c.v) + d.v) * elapsed_time;
 	cv = v + (1.0f / 6.0f) * (a.a + 2.0f * (b.a + c.a) + d.a) * elapsed_time;*/
-	
+	if (cnt > 1) {
+		int sa = 0;
+	}
+	cnt = 0;
 	pos = pos + cv * elapsed_time;
 	cv = cv + as * elapsed_time;
 
@@ -76,9 +79,9 @@ void Ball::apply() {
 	Vecf ta = pos - centre;
 	ta.norm();
 	ta *= 3;
-	ca = -1*ta;
-	//ca.x = 0;
-	//ca.y = 5;
+	//ca = -1*ta;
+	ca.x = 0;
+	ca.y = 5;
 
 	
 }

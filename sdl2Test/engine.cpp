@@ -86,7 +86,7 @@ void bfs(Ball* ball) {
 
 
 				float d = v_ball->r + curr_ball->r;
-				if (t.size() <= 0.000001f) {
+				if (t.size() <= 0.0001f) {
 					t = 10 * t;
 				}
 
@@ -101,9 +101,9 @@ void bfs(Ball* ball) {
 				if (dist < 1) {
 					dist = 1;
 				}
-				//dav += 200 * t / dist / v_ball->mass;
+				dav += 20000 * t / dist / v_ball->mass;
 
-				//dac += -1 * 200 * t / dist / v_ball->mass;
+				dac += -1 * 20000* t / dist / v_ball->mass;
 
 
 				if (v_ball->hit_handled!=2) {
@@ -120,9 +120,9 @@ void bfs(Ball* ball) {
 
 
 				curr_ball->ca += dac;
-				if (!support) {
+				
 					curr_ball->pos += dposc;
-				}
+				
 
 				//elastic bounce
 				dist = point2_distance(v_ball->pos, curr_ball->pos);
