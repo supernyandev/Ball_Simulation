@@ -64,7 +64,6 @@ void Ball::move( std::vector<Ball*>& balls) {
 
 	
 	
-	
 	 
 }
 void Ball::apply() {

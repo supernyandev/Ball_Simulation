@@ -2,7 +2,7 @@
 #include "vec.h"
 #include "misc.h"
 #include <random>
-#include <stack>
+#include <queue>
 Engine::Engine(SDL_Renderer* renderer,float t) {
 	this->TIME_PER_TICK = t;
 	this->renderer = renderer;
@@ -59,90 +59,105 @@ void Engine::moveall() {
 
 	}
 }
-void dfs(Ball* ball) {
+void bfs(Ball* ball) {
 	if (ball == NULL || ball->hit_handled) return;
-		ball->hit_handled = 1;
-		auto curr_ball = ball;
-		curr_ball->hit_handled = 1;
-		curr_ball->bounce_off_wall();
-		bool support = 0;
-		if (curr_ball->hits.size() >= 3) {
-			support = 1;
-		}
+		std::queue<Ball*> q;
+		q.push(ball);
+		while(!q.empty()){
 
-		for (auto v_ball : curr_ball->hits) {
-			dfs(v_ball);
-			v_ball->bounce_off_wall();
-			Vecf t = v_ball->pos - curr_ball->pos;
-			float dist = point2_distance(v_ball->pos, curr_ball->pos);
-
-			if (isnan(dist)) {
-				dist = 0;
-			}
-
-
-			float d = v_ball->r + curr_ball->r;
-			if (t.size() <= 0.000001f) {
-				t = 10 * t;
-			}
-
-			t.norm();
-
-			Vecf dposv(0, 0);
-			Vecf dposc(0, 0);
-			Vecf dav(0, 0);
-			Vecf dac(0, 0);
-			if (dist < 0.001) {
-				dist = 0.001;
-			}
-			dav += 2000 * t / dist / v_ball->mass;
-
-			dac += -1 * 2000 * t / dist / v_ball->mass;
-			dposv += t * (d - dist) * 0.5;
-			dposc += -1 * t * (d - dist) * 0.5;
-
-			
-			v_ball->pos += dposv;
-			v_ball->ca += dav;
-				
-			
-
-			curr_ball->ca += dac;
-			if (!support) {
-				curr_ball->pos += dposc;
-			}
-
-			//elastic bounce
-			dist = point2_distance(v_ball->pos, curr_ball->pos);
-
-			if (isnan(dist)) {
-				dist = 1;
-			}
-			if (dist <= 0.0001f) {
-				dist = 1;
-			}
+			auto curr_ball = q.front();
+			q.pop();
+			curr_ball->cnt++;
+			curr_ball->hit_handled = 2;
 			curr_ball->bounce_off_wall();
-			Vecf v1 = curr_ball->v;
-			Vecf v2 = v_ball->v;
+			bool support = 0;
+			if (curr_ball->hits.size() >= 3) {
+				support = 1;
+			}
 
-			Vecf pos1 = curr_ball->pos;
-			Vecf pos2 = v_ball->pos;
-			float m1 = curr_ball->mass;
-			float m2 = v_ball->mass;
-			Vecf nv1 = v1 - ((2 * m2) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist)) * (pos1 - pos2);
-			Vecf nv2 = v2 - (2 * m1) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist) * (pos2 - pos1);
+			for (auto v_ball : curr_ball->hits) {
+				v_ball->bounce_off_wall();
+				Vecf t = v_ball->pos - curr_ball->pos;
+				float dist = point2_distance(v_ball->pos, curr_ball->pos);
 
-			curr_ball->cv = 0.96 * nv1;
-			v_ball->cv = 0.96 * nv2;
+				if (isnan(dist)) {
+					dist = 0;
+				}
 
-		
+
+				float d = v_ball->r + curr_ball->r;
+				if (t.size() <= 0.000001f) {
+					t = 10 * t;
+				}
+
+				t.norm();
+
+				Vecf dposv(0, 0);
+				Vecf dposc(0, 0);
+				Vecf dav(0, 0);
+				Vecf dac(0, 0);
+				dposv += t * (d - dist) * 0.5;
+				dposc += -1 * t * (d - dist) * 0.5;
+				if (dist < 1) {
+					dist = 1;
+				}
+				//dav += 200 * t / dist / v_ball->mass;
+
+				//dac += -1 * 200 * t / dist / v_ball->mass;
+
+
+				if (v_ball->hit_handled!=2) {
+					v_ball->pos += dposv;
+
+					v_ball->ca += dav;
+
+				}
+				if (v_ball->hit_handled == 0) {
+					q.push(v_ball);
+					v_ball->hit_handled = 1;
+				}
+
+
+
+				curr_ball->ca += dac;
+				if (!support) {
+					curr_ball->pos += dposc;
+				}
+
+				//elastic bounce
+				dist = point2_distance(v_ball->pos, curr_ball->pos);
+
+				if (isnan(dist)) {
+					dist = 1;
+				}
+				if (dist <= 0.0001f) {
+					dist = 1;
+				}
+				curr_ball->bounce_off_wall();
+				Vecf v1 = curr_ball->v;
+				Vecf v2 = v_ball->v;
+
+				Vecf pos1 = curr_ball->pos;
+				Vecf pos2 = v_ball->pos;
+				float m1 = curr_ball->mass;
+				float m2 = v_ball->mass;
+				Vecf nv1 = v1 - ((2 * m2) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist)) * (pos1 - pos2);
+				Vecf nv2 = v2 - (2 * m1) / (m1 + m2) * ((v1 - v2) * (pos1 - pos2)) / (dist * dist) * (pos2 - pos1);
+
+				curr_ball->cv =  0.98*nv1;
+				v_ball->cv =  0.98*nv2;
+
+		}
 	}
 }
 void Engine::handle_hits() {
+	if (minballd != NULL) {
+		bfs(minballd);
+	}
 	for (auto ball : balls) {
-		//dfs
+		
 		if (ball == NULL || ball->hit_handled) continue;
-		dfs(ball);
+		bfs(ball);
 
 		}
 
@@ -163,7 +178,10 @@ void Engine::tick() {
 			if (ball1->ID != ball2->ID) {
 				float d = ball1->r + ball2->r;
 				if (point2_distance(ball1->pos,ball2->pos) - ball1->r - ball2->r<=-0.0000001f) {
-					
+					if (d/(point2_distance(ball1->pos, ball2->pos) - ball1->r - ball2->r) < mind) {
+						mind = d/(point2_distance(ball1->pos, ball2->pos) - ball1->r - ball2->r);
+						minballd = ball1;
+					 }
 					ball1->hits.insert(ball2);
 					ball2->hits.insert(ball1);
 					
@@ -173,6 +191,8 @@ void Engine::tick() {
 	}
 	
 	handle_hits();
+	mind = 100000;
+	minballd = NULL;
 	this->moveall();
 	for (auto ball : balls) {
 		if (ball == NULL) {

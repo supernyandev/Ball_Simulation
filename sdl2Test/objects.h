@@ -15,7 +15,8 @@ public:
 	Vecf cpos;
 	Vecf cv;
 	Vecf ca;
-	bool hit_handled = 0;
+	int cnt = 0;
+	int hit_handled = 0;
 	std::set<Ball*> hits;
 	float r;
 	float elapsed_time;

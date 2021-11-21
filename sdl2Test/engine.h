@@ -17,6 +17,8 @@ class Engine {
 
 		
 private:
+	Ball* minballd=NULL;
+	float mind=10000;
 	float TIME_PER_TICK;
 	std::vector < Ball* > balls;
 	SDL_Renderer* renderer;

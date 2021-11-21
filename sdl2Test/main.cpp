@@ -40,7 +40,7 @@ int main(int argc, char* args[]) {
 	Vecf t1(0, 0);
 	Vecf t2(0, 0);
 	std::cout << t1.size()<<std::endl;
-	for (int i = 0; i < 20; ++i) {
+	for (int i = 0; i < 30; ++i) {
 		for (int j = 0; j < 40; ++j) {
 			bs.add_ball( Vecf(300 + i * 20, 300 + j * 20), 10);
 		}
